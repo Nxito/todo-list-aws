@@ -9,7 +9,7 @@ pipeline {
             steps {
                 echo '[Get Code] Obteniendo código de GitHub...'
                 sh 'whoami && hostname && echo ${WORKSPACE}'
-                git  branch: 'develop',
+                git  branch: 'master',
                     url: 'https://github.com/Nxito/todo-list-aws.git',
                     credentialsId: 'github_token'
                 sh 'ls -a'
@@ -33,7 +33,7 @@ pipeline {
                 sh 'sam build'
                 sh 'cat samconfig.toml'
                 sh '''
-                    sam deploy --config-env staging --no-fail-on-empty-changeset
+                    sam deploy --config-env production --no-fail-on-empty-changeset
                 '''
             //  sh '''
             //         sam deploy \
@@ -50,7 +50,7 @@ pipeline {
             environment {
                     PYTHONPATH = "${WORKSPACE}"
                     AWS_REGION = 'us-east-1'
-                    STACK_NAME = 'staging-todo-list-aws'
+                    STACK_NAME = 'production-todo-list-aws'
                     DYNAMODB_TABLE = 'todoUnitTestsTable'
             }
             steps {
@@ -66,7 +66,7 @@ pipeline {
                     }
                 }
                 echo "Los test usarán la siguiente url: $BASE_URL"
-                sh 'pytest -m api --junitxml=result-rest.xml test/integration/todoApiTest.py || exit'
+                sh 'pytest -m api_read --junitxml=result-rest.xml test/integration/todoApiTest.py || exit'
                 junit testResults: 'result-rest.xml', allowEmptyResults: false, skipPublishingChecks: true
             }
         }
