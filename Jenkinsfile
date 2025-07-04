@@ -73,7 +73,7 @@ pipeline {
         stage('Promote') {
             when {
                 expression {
-                    currentBuild.result == 'SUCCESS'
+                    currentBuild.currentResult == 'SUCCESS'
                 }
             }
             steps {
