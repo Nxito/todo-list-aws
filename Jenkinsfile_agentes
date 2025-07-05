@@ -19,7 +19,10 @@ pipeline {
         stage('Static Test') {
             agent { label 'static-test' }
             environment {
-                PYTHONPATH = "${WORKSPACE}"
+                    PYTHONPATH = "${WORKSPACE}"
+                    AWS_REGION = 'us-east-1'
+                    STACK_NAME = 'staging-todo-list-aws'
+                    DYNAMODB_TABLE = 'todoUnitTestsTable'
             }
             steps {
                 sh 'whoami && hostname && echo ${WORKSPACE}'
@@ -58,10 +61,7 @@ pipeline {
         stage('Rest Tests') {
             agent { label 'rest-test' }
             environment {
-                    PYTHONPATH = "${WORKSPACE}"
-                    AWS_REGION = 'us-east-1'
-                    STACK_NAME = 'staging-todo-list-aws'
-                    DYNAMODB_TABLE = 'todoUnitTestsTable'
+                PYTHONPATH = "${WORKSPACE}" 
             }
             steps {
                  sh 'whoami && hostname && echo ${WORKSPACE}'
