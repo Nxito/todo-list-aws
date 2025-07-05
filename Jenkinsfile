@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    options {
+        skipDefaultCheckout true
+    }
     environment {
         GITHUB_TOKEN = credentials('github_token')
     }
