@@ -12,6 +12,10 @@ pipeline {
                 git  branch: 'develop',
                     url: 'https://github.com/Nxito/todo-list-aws.git',
                     credentialsId: 'github_token'
+                sh '''
+                    curl -o samconfig.toml https://raw.githubusercontent.com/Nxito/todo-list-aws-config/refs/heads/staging/samconfig.toml
+                    cat
+                '''
                 sh 'ls -a'
                 echo "$WORKSPACE"
                 stash name: 'my-code'
