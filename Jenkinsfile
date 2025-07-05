@@ -89,7 +89,7 @@ pipeline {
     post  {
         always {
             cleanWs()
-            aws cloudformation delete-stack --stack-name production-todo-list-aws
+            sh 'aws cloudformation delete-stack --stack-name production-todo-list-aws'
 
         }
     }
