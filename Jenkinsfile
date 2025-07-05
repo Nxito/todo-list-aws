@@ -33,7 +33,7 @@ pipeline {
                 sh 'sam build'
                 sh 'cat samconfig.toml'
                 sh '''
-                    sam deploy --config-env stagging --no-fail-on-empty-changeset
+                    sam deploy --config-env staging --no-fail-on-empty-changeset
                 '''
             //  sh '''
             //         sam deploy \
