@@ -19,10 +19,7 @@ pipeline {
         stage('Static Test') {
             agent { label 'static-test' }
             environment {
-                    PYTHONPATH = "${WORKSPACE}"
-                    AWS_REGION = 'us-east-1'
-                    STACK_NAME = 'staging-todo-list-aws'
-                    DYNAMODB_TABLE = 'todoUnitTestsTable'
+                    PYTHONPATH = "${WORKSPACE}" 
             }
             steps {
                 sh 'whoami && hostname && echo ${WORKSPACE}'
@@ -34,6 +31,11 @@ pipeline {
             }
         }
         stage('SAM') {
+            environment {
+                    AWS_REGION = 'us-east-1'
+                    STACK_NAME = 'staging-todo-list-aws'
+                    DYNAMODB_TABLE = 'todoUnitTestsTable'
+            }
             steps {
                 sh 'whoami && hostname && echo ${WORKSPACE}'
                 sh 'sam build'
@@ -51,10 +53,11 @@ pipeline {
                             returnStdout: true
                         ).trim()
                         echo "BaseUrlApi: ${baseUrl}"
-                        sh "echo ${baseUrl} > base_url.txt" 
+                        writeFile file: 'base_url.txt', text: baseUrl 
+                        stash name: 'base-url', includes: 'base_url.txt'
                     }
                 }
-            stash name: 'base-url', includes: 'base_url.txt' 
+             
 
             }
         }
