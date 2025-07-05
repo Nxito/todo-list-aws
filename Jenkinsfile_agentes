@@ -1,0 +1,106 @@
+pipeline {
+    agent { label 'main' }
+    environment {
+        GITHUB_TOKEN = credentials('github_token')
+    }
+    stages {
+        stage('Get Code') {
+             steps {
+                echo '[Get Code] Obteniendo código de GitHub...'
+                sh 'whoami && hostname && echo ${WORKSPACE}'
+                git  branch: 'develop',
+                    url: 'https://github.com/Nxito/todo-list-aws.git',
+                    credentialsId: 'github_token'
+                sh 'ls -a'
+                echo "$WORKSPACE"
+                stash name: 'my-code', includes: '**'
+            }
+        }
+        stage('Static Test') {
+            agent { label 'static-test' }
+            environment {
+                PYTHONPATH = "${WORKSPACE}"
+            }
+            steps {
+                sh 'whoami && hostname && echo ${WORKSPACE}'
+                unstash 'my-code'
+                sh 'flake8 --format=pylint src > flake8.out'
+                sh 'cat flake8.out'
+                sh 'bandit -r src -f custom -o bandit.out --msg-template "{abspath}:{line}: {severity}: {test_id}: {msg}" || true'
+                sh 'cat bandit.out'
+            }
+        }
+        stage('SAM') {
+            steps {
+                sh 'whoami && hostname && echo ${WORKSPACE}'
+                sh 'sam build'
+                sh 'cat samconfig.toml'
+                sh '''
+                    sam deploy --config-env staging --no-fail-on-empty-changeset
+                '''
+
+            // el servidor se levanta aqui, asi que aqui pillo la url, 
+            // la guardo en un archivo y se la paso a los demas agentes
+            script {
+                    catchError(buildResult: 'ABORTED', stageResult: 'FAILURE') {
+                        def baseUrl = sh(
+                            script: "aws cloudformation describe-stacks --stack-name ${STACK_NAME} --query 'Stacks[0].Outputs[?OutputKey==`BaseUrlApi`].OutputValue' --region ${AWS_REGION} --output text",
+                            returnStdout: true
+                        ).trim()
+                        echo "BaseUrlApi: ${baseUrl}"
+                        sh "echo ${baseUrl} > base_url.txt" 
+                        stash name: 'base-url', includes: 'base_url.txt' 
+                    }
+                }
+            }
+        }
+
+        stage('Rest Tests') {
+            agent { label 'rest-test' }
+            environment {
+                    PYTHONPATH = "${WORKSPACE}"
+                    AWS_REGION = 'us-east-1'
+                    STACK_NAME = 'staging-todo-list-aws'
+                    DYNAMODB_TABLE = 'todoUnitTestsTable'
+            }
+            steps {
+                 sh 'whoami && hostname && echo ${WORKSPACE}'
+                 unstash 'my-code'
+                 unstash 'base-url'
+
+                //Añado la URL base para que el api la use
+                script {
+                    catchError(buildResult: 'ABORTED', stageResult: 'FAILURE') {
+                        def baseUrl =  readFile(file: 'base_url.txt')
+                    
+                        echo "Los test usarán la siguiente url: ${baseUrl}"
+                        sh 'pytest -m api  --junitxml=result-rest.xml test/integration/todoApiTest.py || exit'
+                    }
+                }
+                junit testResults: 'result-rest.xml', allowEmptyResults: false, skipPublishingChecks: true
+            }
+        }
+        stage('Promote') {
+            when {
+                expression {
+                    currentBuild.currentResult == 'SUCCESS'
+                }
+            }
+            steps {
+                sh 'whoami && hostname && echo ${WORKSPACE}'
+                unstash 'my-code'
+                echo 'Subiendo cambios a Master'
+                sh '''
+                        git checkout master
+                        git merge -Xours develop
+                        git push "https://${GITHUB_TOKEN}@github.com/Nxito/todo-list-aws.git" master
+                '''
+            }
+        }
+    }
+    post  {
+        always {
+            cleanWs()
+        }
+    }
+}
