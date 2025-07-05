@@ -64,7 +64,7 @@ pipeline {
                         echo "BaseUrlApi: ${baseUrl}"
                         env.BASE_URL = baseUrl
                         echo "Los test usarán la siguiente url: $BASE_URL"
-                        sh 'pytest -m api --junitxml=result-rest.xml test/integration/todoApiTest.py || exit'
+                        sh 'pytest -m api_read --junitxml=result-rest.xml test/integration/todoApiTest.py || exit'
                     }
                 }
                 junit testResults: 'result-rest.xml', allowEmptyResults: false, skipPublishingChecks: true
