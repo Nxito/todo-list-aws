@@ -80,7 +80,7 @@ pipeline {
                         echo "Los test usarán la siguiente url: ${env.BASE_URL}"
                         
                         sh """
-                            pytest -m api --base-url ${env.BASE_URL} --junitxml=result-rest.xml test/integration/todoApiTest.py || exit 1
+                            pytest -m api --junitxml=result-rest.xml test/integration/todoApiTest.py || exit 1
                         """
                     }
                 }
