@@ -12,7 +12,7 @@ pipeline {
                     url: 'https://github.com/Nxito/todo-list-aws.git',
                     credentialsId: 'github_token'
                 sh '''
-                    curl -o samconfig.toml https://raw.githubusercontent.com/Nxito/todo-list-aws-config/refs/heads/production/samconfig.toml
+                    curl -o samconfig.toml https://raw.githubusercontent.com/Nxito/todo-list-aws-config/refs/heads/staging/samconfig.toml
                     cat samconfig.toml 
                 '''
                 sh 'ls -a'
