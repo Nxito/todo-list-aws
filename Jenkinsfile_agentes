@@ -75,11 +75,13 @@ pipeline {
                 //Añado la URL base para que el api la use
                 script {
                     catchError(buildResult: 'ABORTED', stageResult: 'FAILURE') {
-                        def baseUrl =  readFile(file: 'base_url.txt')
-                        export BASE_URL=baseUrl
-                        echo "Los test usarán la siguiente url: ${BASE_URL}"
+                        def baseUrl = readFile('base_url.txt').trim()
+                        env.BASE_URL = baseUrl
+                        echo "Los test usarán la siguiente url: ${env.BASE_URL}"
                         
-                        sh 'pytest -m api  --junitxml=result-rest.xml test/integration/todoApiTest.py || exit'
+                        sh """
+                            pytest -m api --base-url ${env.BASE_URL} --junitxml=result-rest.xml test/integration/todoApiTest.py || exit 1
+                        """
                     }
                 }
                 junit testResults: 'result-rest.xml', allowEmptyResults: false, skipPublishingChecks: true
