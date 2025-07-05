@@ -86,11 +86,14 @@ pipeline {
         //     }
         // }
     }
-    post  {
+    post {
         always {
             cleanWs()
-            sh 'aws cloudformation delete-stack --stack-name production-todo-list-aws'
-
+        }
+        cleanup {
+            script {
+                sh 'aws cloudformation delete-stack --stack-name production-todo-list-aws || true'
+            }
         }
     }
 }
