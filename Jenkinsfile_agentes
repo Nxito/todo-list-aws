@@ -76,8 +76,9 @@ pipeline {
                 script {
                     catchError(buildResult: 'ABORTED', stageResult: 'FAILURE') {
                         def baseUrl =  readFile(file: 'base_url.txt')
-                    
-                        echo "Los test usarán la siguiente url: ${baseUrl}"
+                        export BASE_URL=baseUrl
+                        echo "Los test usarán la siguiente url: ${BASE_URL}"
+                        
                         sh 'pytest -m api  --junitxml=result-rest.xml test/integration/todoApiTest.py || exit'
                     }
                 }
